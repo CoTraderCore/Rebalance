@@ -139,6 +139,7 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
     exchangePortal = ExchangePortalInterface(_exchangePortalAddress);
     permittedExchanges = PermittedExchangesInterface(_permittedExchangesAddress);
 
+    // Standard Kyber Parametrs converted to bytes32
     // maxDestAmount = bytes32(2**256 - 1)
     KyberAdditionalParams.push(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
     // minConversionRat = bytes32(1)
@@ -149,8 +150,6 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
     emit SmartFundCreated(owner);
   }
 
-
-  // NOT FINISHED
 
   /**
   * @dev Rebalance ETH input value to % balance of each asset in curent fund
