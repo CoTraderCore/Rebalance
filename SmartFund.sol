@@ -67,6 +67,9 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
   // An array of all the erc20 token addresses the smart fund holds
   address[] public tokenAddresses;
 
+  // Standart Kyber Parametrs
+  bytes32[] KyberAdditionalParams;
+
   // Boolean value that determines whether the fund accepts deposits from anyone or
   // only specific addresses approved by the manager
   bool public onlyWhitelist = false;
@@ -136,6 +139,13 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
     exchangePortal = ExchangePortalInterface(_exchangePortalAddress);
     permittedExchanges = PermittedExchangesInterface(_permittedExchangesAddress);
 
+    // maxDestAmount = bytes32(2**256 - 1)
+    KyberAdditionalParams.push(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    // minConversionRat = bytes32(1)
+    KyberAdditionalParams.push(0x0000000000000000000000000000000000000000000000000000000000000001);
+    // walletId bytes32(0)
+    KyberAdditionalParams.push(0x0000000000000000000000000000000000000000000000000000000000000000);
+
     emit SmartFundCreated(owner);
   }
 
@@ -168,23 +178,11 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
   // array should be more 1 because we store ETH in token array also
   if(tokenAddresses.length > 1){
 
-  uint256 totalETH = _value;
   uint256 tokenValueINETH;
-
   uint256 TokensSumInETH = calculateFundValue();
   uint256 onePercentFromTokensSum = TokensSumInETH.div(100);
   uint256 onePercentOfInput = _value.div(100);
-
-  // Standart Kyber Parametrs
-  bytes32[] KyberAdditionalParams;
-
-
-  // maxDestAmount = bytes32(2**256 - 1)
-  KyberAdditionalParams.push(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
-  // minConversionRat = bytes32(1)
-  KyberAdditionalParams.push(0x0000000000000000000000000000000000000000000000000000000000000001);
-  // walletId bytes32(0)
-  KyberAdditionalParams.push(0x0000000000000000000000000000000000000000000000000000000000000000);
+  uint256 remainETH;
 
 
   for (uint256 i = 1; i < tokenAddresses.length; i++) {
@@ -210,11 +208,11 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
     _type, // Echange type Kyber 0
     KyberAdditionalParams
     );
-   // After success exchange sub value from ETH deposit
-   // And return remaining ETH
-   totalETH.sub(eachTokenPercent);
+    // After success exchange sub each token value from ETH _value
+    remainETH += _value.sub(eachTokenPercent);
   }
-    return totalETH;
+    // return remain ETH
+    return remainETH;
   }else{
     // RETURN ALL ETH VALUE if we have't another tokens in fund
     return _value;
@@ -237,7 +235,7 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
     require(msg.value != 0);
 
     // Call rebalance and write total ETH deposit
-    totalEtherDeposited = _rebalance(msg.value, 0);
+    totalEtherDeposited += _rebalance(msg.value, 0);
 
     // Calculate number of shares
     uint256 shares = calculateDepositToShares(msg.value);
