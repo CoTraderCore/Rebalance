@@ -172,7 +172,7 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
   * @param _value               ETH value
   * @param _type                type of exchange
   */
-  function _rebalance(uint256 _value, uint256 _type) private returns (uint256) {
+  function _rebalance(uint256 _value, uint256 _type) private{
 
   // checking if not empty token array
   // array should be more 1 because we store ETH in token array also
@@ -182,7 +182,6 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
   uint256 TokensSumInETH = calculateFundValue();
   uint256 onePercentFromTokensSum = TokensSumInETH.div(100);
   uint256 onePercentOfInput = _value.div(100);
-  uint256 remainETH;
 
 
   for (uint256 i = 1; i < tokenAddresses.length; i++) {
@@ -208,14 +207,9 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
     _type, // Echange type Kyber 0
     KyberAdditionalParams
     );
-    // After success exchange sub each token value from ETH _value
-    remainETH += _value.sub(eachTokenPercent);
   }
-    // return remain ETH
-    return remainETH;
   }else{
-    // RETURN ALL ETH VALUE if we have't another tokens in fund
-    return _value;
+    return;
   }
   }
 
@@ -234,8 +228,10 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
     // Require that the amount sent is not 0
     require(msg.value != 0);
 
-    // Call rebalance and write total ETH deposit
-    totalEtherDeposited += _rebalance(msg.value, 0);
+    totalEtherDeposited += msg.value;
+
+    // Call rebalance
+    _rebalance(msg.value, 0);
 
     // Calculate number of shares
     uint256 shares = calculateDepositToShares(msg.value);
