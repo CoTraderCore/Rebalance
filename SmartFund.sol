@@ -178,9 +178,11 @@ contract SmartFund is SmartFundInterface, Ownable, ERC20 {
   if(tokenAddresses.length > 1){
 
   uint256 tokenValueINETH;
+
   uint256 TokensSumInETH = calculateFundValue();
-  // sub new _value from Fund Value
+  // sub new _value from Fund Value and get 1% of tokens sum
   uint256 onePercentFromTokensSum = TokensSumInETH.sub(_value).div(100);
+  // get 1% of input _value
   uint256 onePercentOfInput = _value.div(100);
 
 
